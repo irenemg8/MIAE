@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Interactiva de Convertidores DC-DC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- MathJax for rendering LaTeX equations -->
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML">
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem; /* 16px */
+            margin-bottom: 1rem; /* 16px */
+        }
+        .input-group {
+            margin-bottom: 0; /* Override default margin */
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #475569;
+        }
+        .input-group input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #334155;
+            transition: border-color 0.2s;
+        }
+        .input-group input[type="number"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #e0f7fa; /* Lighter cyan for results */
+            border-radius: 10px;
+            border: 1px solid #00bcd4; /* Cyan border */
+            color: #006064; /* Darker cyan text */
+            font-size: 1.15rem;
+            font-weight: 600;
+            line-height: 1.6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        .result p {
+            margin-bottom: 8px;
+        }
+        .result p:last-child {
+            margin-bottom: 0;
+        }
+        .formula-box {
+            background-color: #f8fafc;
+            border-left: 4px solid #60a5fa;
+            padding: 16px;
+            margin-top: 16px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.95rem;
+            color: #334155;
+        }
+        .diagram {
+            width: 100%;
+            max-width: 500px;
+            height: 300px; /* Fixed height for consistent display */
+            background-color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin: 20px auto;
+            overflow: hidden; /* Hide overflow if text is too long */
+        }
+        .tab-button {
+            padding: 10px 20px;
+            border-radius: 8px 8px 0 0;
+            background-color: #e2e8f0;
+            cursor: pointer;
+            font-weight: 600;
+            color: #64748b;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .tab-button.active {
+            background-color: #ffffff;
+            color: #3b82f6;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+        }
+        .tab-content {
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="container mx-auto">
+        <h1 class="text-4xl font-extrabold text-center text-blue-700 mb-8">Guía Interactiva de Convertidores DC-DC</h1>
+
+        <p class="text-lg text-gray-700 mb-8 text-center">
+            ¡Hola! Entiendo tu preocupación. Esta guía interactiva te ayudará a comprender los convertidores Buck, Boost y Buck-Boost, y cómo calcular los valores de sus componentes clave. Exploraremos la teoría detrás de cada uno y te daré las fórmulas para que puedas hacer tus propios cálculos y comparar.
+        </p>
+
+        <!-- Tab buttons for selecting converter type -->
+        <div class="flex justify-center mb-6">
+            <button class="tab-button active" onclick="showTab('buck')">Buck</button>
+            <button class="tab-button" onclick="showTab('boost')">Boost</button>
+            <button class="tab-button" onclick="showTab('buckboost')">Buck-Boost</button>
+        </div>
+
+        <!-- Buck Converter Section -->
+        <div id="buck-tab" class="tab-content card">
+            <h2 class="text-3xl font-bold text-blue-600 mb-4">Convertidor Buck (Reductor)</h2>
+            <p class="text-gray-700 mb-4">
+                El convertidor Buck es un tipo de convertidor DC-DC que <strong>reduce</strong> la tensión de entrada a una tensión de salida menor, manteniendo la misma polaridad. Es ampliamente utilizado en fuentes de alimentación donde se necesita una reducción eficiente de voltaje.
+            </p>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">Diagrama del circuito:</h3>
+            <!-- Placeholder for Buck Converter Diagram -->
+            <div class="diagram">
+                <p>Diagrama de un Convertidor Buck</p>
+                <!-- In a live environment, you could embed an SVG or actual image here -->
+                <!-- <img src="https://placehold.co/500x300/e0f2fe/039be5?text=Diagrama+Buck" alt="Diagrama de un convertidor Buck" class="w-full h-full object-contain"> -->
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">Funcionamiento Teórico (Modo de Conducción Continua - CCM):</h3>
+            <ul class="list-disc list-inside text-gray-700 mb-4 ml-4">
+                <li>Cuando el interruptor (transistor) está <strong>cerrado (ON)</strong>, el inductor se carga y la corriente fluye hacia la carga y el condensador. La tensión en el inductor es $V_L = V_{in} - V_{out}$.</li>
+                <li>Cuando el interruptor está <strong>abierto (OFF)</strong>, el inductor se descarga a través del diodo y la carga. La tensión en el inductor es $V_L = -V_{out}$.</li>
+                <li>La relación entre la tensión de salida y la de entrada es controlada por el <strong>ciclo de trabajo (D)</strong>: $V_{out} = D \cdot V_{in}$.</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Cálculo de la Bobina (L) y el Condensador (C):</h3>
+            <p class="text-gray-700 mb-4">Introduce los valores para calcular la bobina y el condensador necesarios para tu diseño de convertidor Buck.</p>
+
+            <!-- Input fields for Buck converter calculations -->
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="buck-vin">Tensión de Entrada ($V_{in}$ en V):</label>
+                    <input type="number" id="buck-vin" value="12" placeholder="Ej: 12">
+                </div>
+                <div class="input-group">
+                    <label for="buck-vout">Tensión de Salida ($V_{out}$ en V):</label>
+                    <input type="number" id="buck-vout" value="5" placeholder="Ej: 5">
+                </div>
+                <div class="input-group">
+                    <label for="buck-iout">Corriente de Salida Promedio ($I_{out}$ en A):</label>
+                    <input type="number" id="buck-iout" value="2.5" placeholder="Ej: 2.5">
+                </div>
+                <div class="input-group">
+                    <label for="buck-fsw">Frecuencia de Conmutación ($f_{sw}$ en Hz):</label>
+                    <input type="number" id="buck-fsw" value="200000" placeholder="Ej: 200000">
+                </div>
+                <div class="input-group">
+                    <label for="buck-ripple-il">Rizado de Corriente en la Bobina ($\Delta I_L$ como % de $I_{out}$):</label>
+                    <input type="number" id="buck-ripple-il" value="30" placeholder="Ej: 30">
+                </div>
+                <div class="input-group">
+                    <label for="buck-ripple-vo">Rizado de Tensión en la Salida ($\Delta V_o$ en mV):</label>
+                    <input type="number" id="buck-ripple-vo" value="100" placeholder="Ej: 100">
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="calculateBuck()">Calcular Buck</button>
+
+            <!-- Results display for Buck converter -->
+            <div id="buck-results" class="result hidden">
+                <p><strong>Ciclo de Trabajo (D):</strong> <span id="buck-duty-cycle"></span></p>
+                <p><strong>Rizado de Corriente en Bobina ($\Delta I_L$):</strong> <span id="buck-delta-il"></span> A</p>
+                <p><strong>Valor de la Bobina (L):</strong> <span id="buck-L"></span> µH</p>
+                <p><strong>Valor del Condensador (C):</strong> <span id="buck-C"></span> µF</p>
+            </div>
+
+            <!-- Formulas for Buck converter -->
+            <div class="formula-box">
+                <h4 class="text-lg font-bold">Fórmulas Utilizadas:</h4>
+                <p class="math-formula">$$D = \frac{V_{\text{out}}}{V_{\text{in}}}$$</p>
+                <p class="math-formula">$$\Delta I_L = \text{Porcentaje\_Rizado} \cdot I_{\text{out}}$$</p>
+                <p class="math-formula">$$L = \frac{(V_{\text{in}} - V_{\text{out}}) \cdot D}{f_{\text{sw}} \cdot \Delta I_L}$$</p>
+                <p class="math-formula">$$C = \frac{\Delta I_L}{8 \cdot f_{\text{sw}} \cdot \Delta V_o}$$</p>
+            </div>
+        </div>
+
+        <!-- Boost Converter Section -->
+        <div id="boost-tab" class="tab-content card hidden">
+            <h2 class="text-3xl font-bold text-blue-600 mb-4">Convertidor Boost (Elevador)</h2>
+            <p class="text-gray-700 mb-4">
+                El convertidor Boost es un convertidor DC-DC que <strong>eleva</strong> la tensión de entrada a una tensión de salida mayor, manteniendo la misma polaridad. Se utiliza comúnmente en aplicaciones donde se requiere un aumento de voltaje, como en sistemas de alimentación de LED o en etapas de entrada de inversores.
+            </p>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">Diagrama del circuito:</h3>
+            <!-- Placeholder for Boost Converter Diagram -->
+            <div class="diagram">
+                <p>Diagrama de un Convertidor Boost</p>
+                <!-- <img src="https://placehold.co/500x300/e0f7fa/006064?text=Diagrama+Boost" alt="Diagrama de un convertidor Boost" class="w-full h-full object-contain"> -->
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">Funcionamiento Teórico (Modo de Conducción Continua - CCM):</h3>
+            <ul class="list-disc list-inside text-gray-700 mb-4 ml-4">
+                <li>Cuando el interruptor está <strong>cerrado (ON)</strong>, el inductor se carga y la tensión en él es $V_L = V_{in}$. El diodo está polarizado inversamente y el condensador descarga su energía a la carga.</li>
+                <li>Cuando el interruptor está <strong>abierto (OFF)</strong>, el inductor se descarga a través del diodo, la carga y el condensador. La tensión en el inductor es $V_L = V_{in} - V_{out}$.</li>
+                <li>La relación entre la tensión de salida y la de entrada es: $V_{out} = \frac{V_{in}}{1 - D}$.</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Cálculo de la Bobina (L) y el Condensador (C):</h3>
+            <p class="text-gray-700 mb-4">Introduce los valores para calcular la bobina y el condensador necesarios para tu diseño de convertidor Boost.</p>
+
+            <!-- Input fields for Boost converter calculations -->
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="boost-vin">Tensión de Entrada ($V_{in}$ en V):</label>
+                    <input type="number" id="boost-vin" value="5" placeholder="Ej: 5">
+                </div>
+                <div class="input-group">
+                    <label for="boost-vout">Tensión de Salida ($V_{out}$ en V):</label>
+                    <input type="number" id="boost-vout" value="12" placeholder="Ej: 12">
+                </div>
+                <div class="input-group">
+                    <label for="boost-iout">Corriente de Salida Promedio ($I_{out}$ en A):</label>
+                    <input type="number" id="boost-iout" value="0.5" placeholder="Ej: 0.5">
+                </div>
+                <div class="input-group">
+                    <label for="boost-fsw">Frecuencia de Conmutación ($f_{sw}$ en Hz):</label>
+                    <input type="number" id="boost-fsw" value="100000" placeholder="Ej: 100000">
+                </div>
+                <div class="input-group">
+                    <label for="boost-ripple-il">Rizado de Corriente en la Bobina ($\Delta I_L$ como % de $I_L$ promedio):</label>
+                    <input type="number" id="boost-ripple-il" value="30" placeholder="Ej: 30">
+                </div>
+                <div class="input-group">
+                    <label for="boost-ripple-vo">Rizado de Tensión en la Salida ($\Delta V_o$ en mV):</label>
+                    <input type="number" id="boost-ripple-vo" value="100" placeholder="Ej: 100">
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="calculateBoost()">Calcular Boost</button>
+
+            <!-- Results display for Boost converter -->
+            <div id="boost-results" class="result hidden">
+                <p><strong>Ciclo de Trabajo (D):</strong> <span id="boost-duty-cycle"></span></p>
+                <p><strong>Corriente Promedio de la Bobina ($I_L$):</strong> <span id="boost-il-avg"></span> A</p>
+                <p><strong>Rizado de Corriente en Bobina ($\Delta I_L$):</strong> <span id="boost-delta-il"></span> A</p>
+                <p><strong>Valor de la Bobina (L):</strong> <span id="boost-L"></span> µH</p>
+                <p><strong>Valor del Condensador (C):</strong> <span id="boost-C"></span> µF</p>
+            </div>
+
+            <!-- Formulas for Boost converter -->
+            <div class="formula-box">
+                <h4 class="text-lg font-bold">Fórmulas Utilizadas:</h4>
+                <p class="math-formula">$$D = 1 - \frac{V_{\text{in}}}{V_{\text{out}}}$$</p>
+                <p class="math-formula">$$I_L = \frac{I_{\text{out}}}{1 - D}$$</p>
+                <p class="math-formula">$$\Delta I_L = \text{Porcentaje\_Rizado} \cdot I_L$$</p>
+                <p class="math-formula">$$L = \frac{V_{\text{in}} \cdot D}{f_{\text{sw}} \cdot \Delta I_L}$$</p>
+                <p class="math-formula">$$C = \frac{I_{\text{out}} \cdot D}{f_{\text{sw}} \cdot \Delta V_o}$$</p>
+            </div>
+        </div>
+
+        <!-- Buck-Boost Converter Section -->
+        <div id="buckboost-tab" class="tab-content card hidden">
+            <h2 class="text-3xl font-bold text-blue-600 mb-4">Convertidor Buck-Boost (Inversor-Reductor/Elevador)</h2>
+            <p class="text-gray-700 mb-4">
+                El convertidor Buck-Boost puede <strong>elevar o reducir</strong> la tensión de entrada y, lo más importante, <strong>invierte la polaridad</strong> de la tensión de salida. Es útil cuando se necesita una salida de voltaje negativa a partir de una entrada positiva o cuando la relación de tensión puede variar por encima o por debajo de la unidad.
+            </p>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">Diagrama del circuito:</h3>
+            <!-- Placeholder for Buck-Boost Converter Diagram -->
+            <div class="diagram">
+                <p>Diagrama de un Convertidor Buck-Boost</p>
+                <!-- <img src="https://placehold.co/500x300/e0f2f0/607d8b?text=Diagrama+Buck-Boost" alt="Diagrama de un convertidor Buck-Boost" class="w-full h-full object-contain"> -->
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">Funcionamiento Teórico (Modo de Conducción Continua - CCM):</h3>
+            <ul class="list-disc list-inside text-gray-700 mb-4 ml-4">
+                <li>Cuando el interruptor está <strong>cerrado (ON)</strong>, la tensión de entrada carga el inductor. La tensión en el inductor es $V_L = V_{in}$. El diodo está polarizado inversamente y el condensador descarga su energía a la carga.</li>
+                <li>Cuando el interruptor está <strong>abierto (OFF)</strong>, el inductor se descarga a través del diodo y la carga. La tensión en el inductor es $V_L = -V_{out}$.</li>
+                <li>La relación entre la tensión de salida y la de entrada es: $V_{out} = -V_{in} \cdot \frac{D}{1 - D}$.</li>
+            </ul>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Cálculo de la Bobina (L) y el Condensador (C):</h3>
+            <p class="text-gray-700 mb-4">Introduce los valores para calcular la bobina y el condensador necesarios para tu diseño de convertidor Buck-Boost.</p>
+
+            <!-- Input fields for Buck-Boost converter calculations -->
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="buckboost-vin">Tensión de Entrada ($V_{in}$ en V):</label>
+                    <input type="number" id="buckboost-vin" value="10" placeholder="Ej: 10">
+                </div>
+                <div class="input-group">
+                    <label for="buckboost-vout">Valor Absoluto de la Tensión de Salida ($|V_{out}|$ en V):</label>
+                    <input type="number" id="buckboost-vout" value="100" placeholder="Ej: 100">
+                </div>
+                <div class="input-group">
+                    <label for="buckboost-iout">Corriente de Salida Promedio ($I_{out}$ en A):</label>
+                    <input type="number" id="buckboost-iout" value="2" placeholder="Ej: 2">
+                </div>
+                <div class="input-group">
+                    <label for="buckboost-fsw">Frecuencia de Conmutación ($f_{sw}$ en Hz):</label>
+                    <input type="number" id="buckboost-fsw" value="100000" placeholder="Ej: 100000">
+                </div>
+                <div class="input-group">
+                    <label for="buckboost-ripple-il">Rizado de Corriente en la Bobina ($\Delta I_L$ como % de $I_L$ promedio):</label>
+                    <input type="number" id="buckboost-ripple-il" value="30" placeholder="Ej: 30">
+                </div>
+                <div class="input-group">
+                    <label for="buckboost-ripple-vo">Rizado de Tensión en la Salida ($\Delta V_o$ en mV):</label>
+                    <input type="number" id="buckboost-ripple-vo" value="1000" placeholder="Ej: 1000">
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="calculateBuckBoost()">Calcular Buck-Boost</button>
+
+            <!-- Results display for Buck-Boost converter -->
+            <div id="buckboost-results" class="result hidden">
+                <p><strong>Ciclo de Trabajo (D):</strong> <span id="buckboost-duty-cycle"></span></p>
+                <p><strong>Corriente Promedio de la Bobina ($I_L$):</strong> <span id="buckboost-il-avg"></span> A</p>
+                <p><strong>Rizado de Corriente en Bobina ($\Delta I_L$):</strong> <span id="buckboost-delta-il"></span> A</p>
+                <p><strong>Valor de la Bobina (L):</strong> <span id="buckboost-L"></span> µH</p>
+                <p><strong>Valor del Condensador (C):</strong> <span id="buckboost-C"></span> µF</p>
+            </div>
+
+            <!-- Formulas for Buck-Boost converter -->
+            <div class="formula-box">
+                <h4 class="text-lg font-bold">Fórmulas Utilizadas:</h4>
+                <p class="math-formula">$$D = \frac{|V_{\text{out}}|}{V_{\text{in}} + |V_{\text{out}}|}$$</p>
+                <p class="math-formula">$$I_L = I_{\text{out}} \cdot \frac{1}{1 - D}$$</p>
+                <p class="math-formula">$$\Delta I_L = \text{Porcentaje\_Rizado} \cdot I_L$$</p>
+                <p class="math-formula">$$L = \frac{V_{\text{in}} \cdot D}{f_{\text{sw}} \cdot \Delta I_L}$$</p>
+                <p class="math-formula">$$C = \frac{I_{\text{out}} \cdot D}{f_{\text{sw}} \cdot \Delta V_o}$$</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para mostrar la pestaña seleccionada
+        function showTab(tabName) {
+            const tabs = ['buck', 'boost', 'buckboost'];
+            tabs.forEach(tab => {
+                document.getElementById(`${tab}-tab`).classList.add('hidden');
+                document.querySelector(`.tab-button[onclick*="${tab}"]`).classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            document.querySelector(`.tab-button[onclick*="${tabName}"]`).classList.add('active');
+
+            // Ensure MathJax re-typesets content when switching tabs
+            if (typeof MathJax !== 'undefined') {
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+            }
+        }
+
+        // Funciones para calcular los valores de los convertidores
+
+        function calculateBuck() {
+            const Vin = parseFloat(document.getElementById('buck-vin').value);
+            const Vout = parseFloat(document.getElementById('buck-vout').value);
+            const Iout = parseFloat(document.getElementById('buck-iout').value);
+            const Fsw = parseFloat(document.getElementById('buck-fsw').value);
+            const RippleILPercent = parseFloat(document.getElementById('buck-ripple-il').value);
+            const RippleVoMv = parseFloat(document.getElementById('buck-ripple-vo').value);
+
+            // Validar entradas: deben ser números y positivos
+            if (isNaN(Vin) || isNaN(Vout) || isNaN(Iout) || isNaN(Fsw) || isNaN(RippleILPercent) || isNaN(RippleVoMv) ||
+                Vin <= 0 || Vout <= 0 || Iout <= 0 || Fsw <= 0 || RippleILPercent <= 0 || RippleVoMv <= 0) {
+                alert('Por favor, introduce valores válidos y positivos para todos los campos.');
+                return;
+            }
+            // Validación específica para Buck: Vout < Vin
+            if (Vout >= Vin) {
+                alert('Para un convertidor Buck, la tensión de salida debe ser menor que la de entrada.');
+                return;
+            }
+
+            // Calculations
+            const D = Vout / Vin;
+            const DeltaIL = (RippleILPercent / 100) * Iout;
+            
+            // Check for potential division by zero or invalid values before calculation
+            if (Fsw * DeltaIL === 0) {
+                alert('Error: La frecuencia de conmutación o el rizado de corriente en la bobina no pueden ser cero. Ajusta los valores.');
+                return;
+            }
+            const L = ((Vin - Vout) * D) / (Fsw * DeltaIL);
+
+            // Convert mV to V for calculation
+            const RippleVo = RippleVoMv / 1000;
+            if (8 * Fsw * RippleVo === 0) {
+                alert('Error: La frecuencia de conmutación o el rizado de tensión de salida no pueden ser cero. Ajusta los valores.');
+                return;
+            }
+            const C = DeltaIL / (8 * Fsw * RippleVo);
+
+            // Display results
+            document.getElementById('buck-duty-cycle').textContent = D.toFixed(4);
+            document.getElementById('buck-delta-il').textContent = DeltaIL.toFixed(4);
+            document.getElementById('buck-L').textContent = (L * 1e6).toFixed(4); // Convert H to µH
+            document.getElementById('buck-C').textContent = (C * 1e6).toFixed(4); // Convert F to µF
+            document.getElementById('buck-results').classList.remove('hidden');
+        }
+
+        function calculateBoost() {
+            const Vin = parseFloat(document.getElementById('boost-vin').value);
+            const Vout = parseFloat(document.getElementById('boost-vout').value);
+            const Iout = parseFloat(document.getElementById('boost-iout').value);
+            const Fsw = parseFloat(document.getElementById('boost-fsw').value);
+            const RippleILPercent = parseFloat(document.getElementById('boost-ripple-il').value);
+            const RippleVoMv = parseFloat(document.getElementById('boost-ripple-vo').value);
+
+            // Validar entradas: deben ser números y positivos
+            if (isNaN(Vin) || isNaN(Vout) || isNaN(Iout) || isNaN(Fsw) || isNaN(RippleILPercent) || isNaN(RippleVoMv) ||
+                Vin <= 0 || Vout <= 0 || Iout <= 0 || Fsw <= 0 || RippleILPercent <= 0 || RippleVoMv <= 0) {
+                alert('Por favor, introduce valores válidos y positivos para todos los campos.');
+                return;
+            }
+            // Validación específica para Boost: Vout > Vin
+            if (Vout <= Vin) {
+                alert('Para un convertidor Boost, la tensión de salida debe ser mayor que la de entrada.');
+                return;
+            }
+
+            // Calculations
+            const D = 1 - (Vin / Vout);
+            
+            // Check for potential division by zero or invalid values before calculation
+            if (1 - D <= 0) { // Cycle D must be less than 1
+                alert('Error: El ciclo de trabajo (D) debe ser menor que 1. Asegúrate de que Vin < Vout.');
+                return;
+            }
+            const IL_avg = Iout / (1 - D); // Average inductor current
+            const DeltaIL = (RippleILPercent / 100) * IL_avg;
+
+            if (Fsw * DeltaIL === 0) {
+                alert('Error: La frecuencia de conmutación o el rizado de corriente en la bobina no pueden ser cero. Ajusta los valores.');
+                return;
+            }
+            const L = (Vin * D) / (Fsw * DeltaIL);
+
+            // Convert mV to V for calculation
+            const RippleVo = RippleVoMv / 1000;
+            if (Fsw * RippleVo === 0) {
+                alert('Error: La frecuencia de conmutación o el rizado de tensión de salida no pueden ser cero. Ajusta los valores.');
+                return;
+            }
+            const C = (Iout * D) / (Fsw * RippleVo);
+
+            // Display results
+            document.getElementById('boost-duty-cycle').textContent = D.toFixed(4);
+            document.getElementById('boost-il-avg').textContent = IL_avg.toFixed(4);
+            document.getElementById('boost-delta-il').textContent = DeltaIL.toFixed(4);
+            document.getElementById('boost-L').textContent = (L * 1e6).toFixed(4); // Convert H to µH
+            document.getElementById('boost-C').textContent = (C * 1e6).toFixed(4); // Convert F to µF
+            document.getElementById('boost-results').classList.remove('hidden');
+        }
+
+        function calculateBuckBoost() {
+            const Vin = parseFloat(document.getElementById('buckboost-vin').value);
+            const VoutAbs = parseFloat(document.getElementById('buckboost-vout').value); // Absolute value of Vout
+            const Iout = parseFloat(document.getElementById('buckboost-iout').value);
+            const Fsw = parseFloat(document.getElementById('buckboost-fsw').value);
+            const RippleILPercent = parseFloat(document.getElementById('buckboost-ripple-il').value);
+            const RippleVoMv = parseFloat(document.getElementById('buckboost-ripple-vo').value);
+
+            // Validar entradas: deben ser números y positivos
+            if (isNaN(Vin) || isNaN(VoutAbs) || isNaN(Iout) || isNaN(Fsw) || isNaN(RippleILPercent) || isNaN(RippleVoMv) ||
+                Vin <= 0 || VoutAbs <= 0 || Iout <= 0 || Fsw <= 0 || RippleILPercent <= 0 || RippleVoMv <= 0) {
+                alert('Por favor, introduce valores válidos y positivos para todos los campos.');
+                return;
+            }
+
+            // Calculations
+            const D = VoutAbs / (Vin + VoutAbs);
+            
+            // Check for potential division by zero or invalid values before calculation
+            if (1 - D <= 0) { // Cycle D must be less than 1
+                alert('Error: El ciclo de trabajo (D) debe ser menor que 1. Asegúrate de que Vin y VoutAbs sean positivos.');
+                return;
+            }
+            const IL_avg = Iout / (1 - D); // Average inductor current
+            const DeltaIL = (RippleILPercent / 100) * IL_avg;
+
+            if (Fsw * DeltaIL === 0) {
+                alert('Error: La frecuencia de conmutación o el rizado de corriente en la bobina no pueden ser cero. Ajusta los valores.');
+                return;
+            }
+            const L = (Vin * D) / (Fsw * DeltaIL);
+
+            // Convert mV to V for calculation
+            const RippleVo = RippleVoMv / 1000;
+            if (Fsw * RippleVo === 0) {
+                alert('Error: La frecuencia de conmutación o el rizado de tensión de salida no pueden ser cero. Ajusta los valores.');
+                return;
+            }
+            const C = (Iout * D) / (Fsw * RippleVo);
+
+            // Display results
+            document.getElementById('buckboost-duty-cycle').textContent = D.toFixed(4);
+            document.getElementById('buckboost-il-avg').textContent = IL_avg.toFixed(4);
+            document.getElementById('buckboost-delta-il').textContent = DeltaIL.toFixed(4);
+            document.getElementById('buckboost-L').textContent = (L * 1e6).toFixed(4); // Convert H to µH
+            document.getElementById('buckboost-C').textContent = (C * 1e6).toFixed(4); // Convert F to µF
+            document.getElementById('buckboost-results').classList.remove('hidden');
+        }
+
+        // Initialize with Buck tab visible and typeset MathJax when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            showTab('buck');
+        });
+    </script>
+</body>
+</html>
